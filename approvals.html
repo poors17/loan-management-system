@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loan Approvals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* Add your custom styles here */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header,
+    footer {
+      background: #0059b3;
+      color: white;
+      text-align: left;
+      padding: 30px 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      position: relative;
+    }
+
+    footer {
+      background: #001f3f;
+      font-weight: normal;
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+
+    .container {
+      flex: 1;
+      padding: 40px 20px;
+      max-width: 100%;
+      margin: auto;
+      overflow-x: auto;
+    }
+
+    h2 {
+      color: #003366;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    button {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+
+    #langToggle {
+      position: absolute;
+      top: 30px;
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      right: 120px;
+      background-color: #3399ff;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    #logoutBtn {
+  position: absolute;
+  top: 30px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+
+    #loading {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #007bff;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <span id="headerTitle">Loan Approvals</span>
+    <button id="langToggle">தமிழ்</button>
+    <button id="logoutBtn">Logout</button>
+  </header>
+  
+  <div class="container">
+    <h2 id="pageTitle">Loan Approvals</h2>
+
+    <div id="loading">Loading...</div>
+
+    <table id="pendingLoansTable">
+      <thead>
+        <tr>
+          <th>Loan ID</th>
+          <th>User Name</th>
+          <th>Age</th>
+          <th>DOB</th>
+          <th>Nationality</th>
+          <th>Marital Status</th>
+          <th>PAN Card</th>
+          <th>Aadhar Card</th>
+          <th>Contact No</th>
+          <th>Email</th>
+          <th>Current Address</th>
+          <th>Permanent Address</th>
+     
+          <th>Loan Amount</th>
+         
+          <th>Purpose</th>
+          <th>Employment Type</th>
+          <th>Income</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loan data will be populated here -->
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    &copy; 2025 Loan Management System. All rights reserved.
+  </footer>
+
+  <script>
+    const tableHeaders = {
+  EN: [
+    "Loan ID",
+    "User Name",
+    "Age",
+    "DOB",
+    "Nationality",
+    "Marital Status",
+    "PAN Card",
+    "Aadhar Card",
+    "Contact No",
+    "Email",
+    "Current Address",
+    "Permanent Address",
+    "Loan Amount",
+   
+    "Purpose",
+    "Employment Type",
+    "Income",
+    "Actions"
+  ],
+  TA: [
+    "கடன் ஐடி",
+    "பயனர் பெயர்",
+    "வயது",
+    "பிறந்த தேதி",
+    "தேசியத்துவம்",
+    "திருமண நிலை",
+    "பான் அட்டை",
+    "ஆதார் அட்டை",
+    "தொடர்பு எண்",
+    "மின்னஞ்சல்",
+    "தற்போதைய முகவரி",
+    "நிரந்தர முகவரி",
+    "கடன் தொகை",
+   
+    "பயன்",
+    "வேலை வகை",
+    "வருமானம்",
+    "செயற்பாடுகள்"
+  ]
+};
+document.getElementById('logoutBtn').onclick = () => {
+  // Clear any auth token or user session data (customize as needed)
+  localStorage.clear(); // Or just remove specific items like localStorage.removeItem('token');
+  
+  // Redirect to login page
+  window.location.href = '/index.html'; // Change this path to your actual login page
+};
+
+function updateTableHeaders(lang) {
+  const thead = document.querySelector("#pendingLoansTable thead tr");
+  thead.innerHTML = tableHeaders[lang].map(header => `<th>${header}</th>`).join("");
+}
+
+    const API_BASE = 'http://localhost:8080'; // Replace with actual API URL
+    let lang = localStorage.getItem('lang') || 'EN'; // Default language is English
+
+    // Language Toggle
+    document.getElementById('langToggle').onclick = () => {
+      lang = lang === 'EN' ? 'TA' : 'EN';
+      localStorage.setItem('lang', lang);
+      translate(lang);
+      loadPendingLoans();  // Reload data after language change
+    };
+
+    // Translate Function
+    function translate(lang) {
+      document.getElementById('pageTitle').textContent = lang === 'TA' ? 'கடன் ஒப்புதல்' : 'Loan Approvals';
+      document.getElementById('langToggle').textContent = lang === 'TA' ? 'English' : 'தமிழ்';
+    }
+
+   // Fetching Pending Loans and Displaying EMI Calculation Once Approved
+async function loadPendingLoans() {
+  document.getElementById('loading').style.display = 'block'; // Show loading
+
+  try {
+    const res = await fetch(`${API_BASE}/api/loan-approvals/pending?lang=${lang}`);
+
+    if (!res.ok) {
+      throw new Error('Failed to load pending loans');
+    }
+
+    const loans = await res.json();
+    console.log('Loans:', loans); // Log the API response for debugging
+
+    const tbody = document.querySelector('#pendingLoansTable tbody');
+    const approveText = lang === 'TA' ? 'ஒப்புதல்' : 'Approve';
+    const rejectText = lang === 'TA' ? 'நிராகரிக்க' : 'Reject';
+
+    tbody.innerHTML = ''; // Clear existing table rows before adding new ones
+
+    // Populate the table with loan data
+    loans.forEach(loan => {
+      const addressProof = loan.addressProof || 'N/A';
+       // Default to 12 months if missing
+      const loanAmount = loan.loanAmount || 0;
+      const income = loan.annualIncome ? `₹${loan.annualIncome.toLocaleString('en-IN')}` : 'N/A';
+
+      const annualRate = 10.5; // Set the interest rate to 10.5%
+
+      // EMI Calculation when loan is approved
+      const emiAmount = loan.status === 'APPROVED' ? calculateEMI(loanAmount, annualRate, termInMonths) : 'N/A';
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${loan.id || 'N/A'}</td>
+          <td>${loan.fullName || 'N/A'}</td>
+          <td>${loan.age || 'N/A'}</td>
+          <td>${loan.dob || 'N/A'}</td>
+          <td>${loan.nationality || 'N/A'}</td>
+          <td>${loan.maritalStatus || 'N/A'}</td>
+          <td>${loan.panCard || 'N/A'}</td>
+          <td>${loan.aadharCard || 'N/A'}</td>
+          <td>${loan.contactNo || 'N/A'}</td>
+          <td>${loan.email || 'N/A'}</td>
+          <td>${loan.currentAddress || 'N/A'}</td>
+          <td>${loan.permanentAddress || 'N/A'}</td>
+          <td>${loanAmount}</td>
+          
+          <td>${loan.purpose || 'N/A'}</td>
+          <td>${loan.employmentType || 'N/A'}</td>
+          <td>${income}</td>
+          <td>
+            <button onclick="updateStatus(${loan.id}, 'APPROVED')">${approveText}</button>
+            <button onclick="updateStatus(${loan.id}, 'REJECTED')">${rejectText}</button>
+          </td>
+        </tr>
+        <tr>
+          
+        </tr>
+      `;
+    });
+
+    // If no loans are available, display a message
+    if (loans.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="18">${lang === 'TA' ? 'இப்போதைக்கு எந்த கடனும் இல்லை' : 'No loans available at the moment'}</td></tr>`;
+    }
+
+    document.getElementById('loading').style.display = 'none'; // Hide loading
+
+  } catch (err) {
+    console.error('Error loading loans:', err);
+    document.getElementById('loading').style.display = 'none'; // Hide loading
+    document.getElementById('message').textContent =
+      lang === 'TA' ? 'கடன்களை ஏற்ற முடியவில்லை.' : 'Failed to load pending loans.';
+  }
+}
+
+// EMI Calculation Function
+function calculateEMI(principal, annualRate, months) {
+  const monthlyRate = (annualRate / 100) / 12;
+  const emi = (principal * monthlyRate * (1 + monthlyRate) ** months) / ((1 + monthlyRate) ** months - 1);
+  return emi.toFixed(2); // Returns EMI rounded to two decimal places
+}
+
+// Update Loan Status
+async function updateStatus(loanId, status) {
+  const endpoint = status === 'APPROVED'
+    ? `${API_BASE}/api/loan-approvals/approve/${loanId}`
+    : `${API_BASE}/api/loan-approvals/reject/${loanId}`;
+
+  try {
+    const res = await fetch(endpoint, { method: 'PUT' });
+
+    if (res.ok) {
+      document.getElementById('message').textContent =
+        lang === 'TA' ? 'நிலைமை புதுப்பிக்கப்பட்டது!' : 'Loan status updated!';
+      loadPendingLoans(); // Reload pending loans after update
+    } else {
+      document.getElementById('message').textContent =
+        lang === 'TA' ? 'நிலைமை புதுப்பிக்க தவறியது.' : 'Failed to update loan status.';
+    }
+  } catch (err) {
+    console.error('Error updating loan status:', err);
+    document.getElementById('message').textContent =
+      lang === 'TA' ? 'சர்வர் பிழை.' : 'Server error.';
+  }
+}
+
+// Initial Data Load
+function translate(lang) {
+  document.getElementById('pageTitle').textContent = lang === 'TA' ? 'கடன் ஒப்புதல்' : 'Loan Approvals';
+  document.getElementById('headerTitle').textContent = lang === 'TA' ? 'கடன் ஒப்புதல்' : 'Loan Approvals';
+  document.getElementById('langToggle').textContent = lang === 'TA' ? 'English' : 'தமிழ்';
+  
+  updateTableHeaders(lang);
+}
+
+
+loadPendingLoans(); // Load the initial pending loans
+</script>
+</body>
+</html>

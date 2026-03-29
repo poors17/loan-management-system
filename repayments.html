@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loan Repayments</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      background: #0059b3;
+      color: white;
+      text-align: left;
+      padding: 30px 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      position: relative;
+    }
+    footer {
+      background: #001f3f;
+      font-weight: normal;
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+    .container {
+      flex: 1;
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h2, h3 {
+      color: #003366;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    label {
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      cursor: pointer;
+      background-color: #0052cc;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #003d99;
+    }
+    #logoutBtn, #langToggle {
+      position: absolute;
+      top: 30px;
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #logoutBtn {
+      right: 20px;
+      background-color: #ff4d4d;
+    }
+    #logoutBtn:hover {
+      background-color: #cc0000;
+    }
+    #langToggle {
+      right: 120px;
+      background-color: #3399ff;
+    }
+    #langToggle:hover {
+      background-color: #007acc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <span id="headerTitle">Loan Repayments</span>
+  <button id="langToggle">தமிழ்</button>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="container">
+  <h2 id="pageTitle">Loan Repayments</h2>
+
+  <label id="loanIdLabel" for="loanIdInput">Enter Loan ID:</label>
+  <input type="number" id="loanIdInput" placeholder="Loan ID" />
+  <button onclick="loadRepayments()" id="loadBtn">Load Repayments</button>
+
+  <table id="repaymentsTable" style="display:none;">
+    <thead>
+      <tr>
+        <th id="thDate">Payment Date</th>
+        <th id="thAmount">Amount Paid</th>
+        <th id="thMethod">Payment Method</th>
+        <th id="thPenalty">Penalty Amount</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3 id="addTitle">Add Repayment</h3>
+  <form id="repaymentForm">
+    <input type="hidden" id="repaymentLoanId" />
+
+    <label id="amountLabel" for="amountPaid">Amount Paid:</label>
+    <input type="number" id="amountPaid" step="0.01" required />
+
+    <label id="methodLabel" for="paymentMethod">Payment Method:</label>
+    <select id="paymentMethod" required>
+      <option value="">Select</option>
+      <option value="Cash">Cash</option>
+      <option value="Online">Online</option>
+      <option value="Cheque">Cheque</option>
+    </select>
+
+    <label id="penaltyLabel" for="penaltyAmount">Penalty Amount (if any):</label>
+    <input type="number" id="penaltyAmount" step="0.01" value="0" />
+
+    <button type="submit" id="submitBtn">Add Repayment</button>
+  </form>
+
+  <p id="message"></p>
+</div>
+
+<footer>
+  &copy; 2025 Loan Management System. All rights reserved.
+</footer>
+
+<script>
+  const API_BASE = 'http://localhost:8080';
+  let lang = localStorage.getItem('lang') || 'EN';
+
+  function translate(lang) {
+    if (lang === 'TA') {
+      document.getElementById('headerTitle').textContent = 'கடன் திருப்பிசெலுத்தல்';
+      document.getElementById('pageTitle').textContent = 'கடன் திருப்பிசெலுத்தல்';
+      document.getElementById('langToggle').textContent = 'English';
+      document.getElementById('loanIdLabel').textContent = 'கடன் ஐடி உள்ளிடவும்:';
+      document.getElementById('loadBtn').textContent = 'ஏற்று';
+      document.getElementById('thDate').textContent = 'செலுத்தும் தேதி';
+      document.getElementById('thAmount').textContent = 'செலுத்திய தொகை';
+      document.getElementById('thMethod').textContent = 'முறையிலான செலுத்தல்';
+      document.getElementById('thPenalty').textContent = 'விலைஏற்றம்';
+      document.getElementById('addTitle').textContent = 'திருப்பிசெலுத்தலை சேர்க்க';
+      document.getElementById('amountLabel').textContent = 'செலுத்திய தொகை:';
+      document.getElementById('methodLabel').textContent = 'செலுத்தும் முறை:';
+      document.getElementById('penaltyLabel').textContent = 'விலைஏற்றம் (ஏதேனும் இருந்தால்):';
+      document.getElementById('submitBtn').textContent = 'சேர்க்க';
+    } else {
+      document.getElementById('headerTitle').textContent = 'Loan Repayments';
+      document.getElementById('pageTitle').textContent = 'Loan Repayments';
+      document.getElementById('langToggle').textContent = 'தமிழ்';
+      document.getElementById('loanIdLabel').textContent = 'Enter Loan ID:';
+      document.getElementById('loadBtn').textContent = 'Load Repayments';
+      document.getElementById('thDate').textContent = 'Payment Date';
+      document.getElementById('thAmount').textContent = 'Amount Paid';
+      document.getElementById('thMethod').textContent = 'Payment Method';
+      document.getElementById('thPenalty').textContent = 'Penalty Amount';
+      document.getElementById('addTitle').textContent = 'Add Repayment';
+      document.getElementById('amountLabel').textContent = 'Amount Paid:';
+      document.getElementById('methodLabel').textContent = 'Payment Method:';
+      document.getElementById('penaltyLabel').textContent = 'Penalty Amount (if any):';
+      document.getElementById('submitBtn').textContent = 'Add Repayment';
+    }
+  }
+
+  document.getElementById('langToggle').onclick = () => {
+    lang = lang === 'EN' ? 'TA' : 'EN';
+    localStorage.setItem('lang', lang);
+    translate(lang);
+  };
+
+  document.getElementById('logoutBtn').onclick = () => {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  };
+
+  translate(lang);
+
+  async function loadRepayments() {
+    const loanId = document.getElementById('loanIdInput').value.trim();
+    const repaymentLoanId = document.getElementById('repaymentLoanId');
+    const message = document.getElementById('message');
+    const table = document.getElementById('repaymentsTable');
+    const tbody = table.querySelector('tbody');
+
+    if (!loanId) {
+      alert(lang === 'TA' ? 'கடன் ஐடியை உள்ளிடவும்.' : 'Please enter a Loan ID');
+      return;
+    }
+
+    repaymentLoanId.value = loanId;
+    message.textContent = '';
+    tbody.innerHTML = '';
+    table.style.display = 'none';
+
+    try {
+      const res = await fetch(`${API_BASE}/repayments/loan/${loanId}`);
+      if (!res.ok) throw new Error('Failed to fetch repayments');
+      const repayments = await res.json();
+
+      if (repayments.length === 0) {
+        message.textContent = lang === 'TA' ? 'இந்த கடனுக்கு திருப்பிசெலுத்தல்கள் இல்லை.' : 'No repayments found for this loan.';
+        return;
+      }
+
+      table.style.display = '';
+      repayments.forEach(r => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${r.paymentDate}</td>
+            <td>${r.amountPaid.toFixed(2)}</td>
+            <td>${r.paymentMethod}</td>
+            <td>${r.penaltyAmount?.toFixed(2) ?? '0.00'}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      message.textContent = lang === 'TA' ? 'பிழை ஏற்பட்டது.' : 'Error occurred.';
+    }
+  }
+
+  document.getElementById('repaymentForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const loanId = document.getElementById('repaymentLoanId').value;
+    const amount = parseFloat(document.getElementById('amountPaid').value);
+    const method = document.getElementById('paymentMethod').value;
+    const penalty = parseFloat(document.getElementById('penaltyAmount').value) || 0;
+    const user = localStorage.getItem('userId');
+    const message = document.getElementById('message');
+
+    if (!loanId || !amount || !method) {
+      alert(lang === 'TA' ? 'அனைத்து விவரங்களையும் உள்ளிடவும்.' : 'Please fill in all required fields.');
+      return;
+    }
+
+    const repaymentData = {
+      loanId: Number(loanId),
+      amountPaid: amount,
+      paymentMethod: method,
+      penaltyAmount: penalty,
+      userId: user,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/repayments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(repaymentData)
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        message.textContent = result.message || (lang === 'TA' ? 'திருப்பிசெலுத்தல் வெற்றிகரமாக சேர்க்கப்பட்டது!' : 'Repayment added successfully!');
+        loadRepayments();
+        document.getElementById('repaymentForm').reset();
+      } else {
+        message.textContent = result.message || (lang === 'TA' ? 'பிழை ஏற்பட்டது.' : 'Failed to add repayment.');
+      }
+    } catch (err) {
+      message.textContent = lang === 'TA' ? 'சர்வருடன் தொடர்பு நிலைமை இல்லாது போனது.' : 'Error communicating with server.';
+    }
+  });
+</script>
+</body>
+</html>
