@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Management</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      background: #0059b3;
+      color: white;
+      padding: 30px 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      position: relative;
+    }
+    footer {
+      background: #001f3f;
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: auto;
+      padding: 15px;
+    }
+    .container {
+      flex: 1;
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h2, h3 {
+      color: #003366;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      cursor: pointer;
+      background-color: #0052cc;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #003d99;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    #logoutBtn, #langToggle {
+      position: absolute;
+      top: 30px;
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #logoutBtn { right: 20px; background-color: #ff4d4d; }
+    #logoutBtn:hover { background-color: #cc0000; }
+    #langToggle { right: 120px; background-color: #3399ff; }
+    #langToggle:hover { background-color: #007acc; }
+    #message {
+      margin-top: 10px;
+      text-align: center;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span id="headerTitle">User Management</span>
+  <button id="langToggle">தமிழ்</button>
+  <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="container">
+  <h2 id="pageTitle">User Management</h2>
+  <form id="userForm">
+    <input type="hidden" id="userId" />
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <select id="role">
+      <option value="ADMIN" selected>Admin</option>
+     
+    </select>
+    <button type="submit" id="saveBtn">Save User</button>
+    <button type="button" id="clearBtn">Clear</button>
+  </form>
+
+  <h3 id="allUsersTitle">All Users</h3>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th id="thId">ID</th>
+        <th id="thUsername">Username</th>
+        <th id="thRole">Role</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p id="message"></p>
+</div>
+
+<footer>
+  &copy; 2025 Loan Management System. All rights reserved.
+</footer>
+
+<script>
+  const usersTableBody = document.querySelector("#usersTable tbody");
+  let isTamil = false;
+
+  // Role translation map
+  const roleTranslations = {
+    "ADMIN": "நிர்வாகி",
+    "CUSTOMER": "வாடிக்கையாளர்"
+  };
+  // Load users on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    loadUsers();
+
+    // Handle form submit
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      const userData = { username, password, role };
+
+      try {
+        const res = await fetch("http://localhost:8080/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        });
+
+        if (res.ok) {
+          alert(isTamil ? "✅ பயனர் உருவாக்கப்பட்டது" : "✅ User created successfully");
+          document.getElementById("userForm").reset();
+          loadUsers();
+        } else {
+          const error = await res.text();
+          alert((isTamil ? "❌ தோல்வி: " : "❌ Failed: ") + error);
+        }
+      } catch (err) {
+        console.error("Save error:", err);
+      }
+    });
+
+    // Clear form
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      document.getElementById("userForm").reset();
+    });
+
+    // Logout functionality
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      window.location.href = "home.html";
+    });
+
+    // Language toggle
+    const langToggleBtn = document.getElementById("langToggle");
+    langToggleBtn.addEventListener("click", () => {
+      toggleLanguage();
+      loadUsers(); // refresh table with translated roles
+    });
+  });
+
+  // Load users from backend API
+  async function loadUsers() {
+    try {
+      const res = await fetch("http://localhost:8080/api/users");
+
+      if (!res.ok) {
+        console.error("Failed to load users:", res.status);
+        return;
+      }
+
+      const users = await res.json();
+      usersTableBody.innerHTML = "";
+
+      users.forEach(user => {
+        const row = document.createElement("tr");
+
+        const idCell = document.createElement("td");
+        idCell.textContent = user.id;
+        row.appendChild(idCell);
+
+        const usernameCell = document.createElement("td");
+        usernameCell.textContent = user.username;
+        row.appendChild(usernameCell);
+
+        const roleCell = document.createElement("td");
+        roleCell.textContent = isTamil ? (roleTranslations[user.role] || user.role) : user.role;
+        row.appendChild(roleCell);
+
+        usersTableBody.appendChild(row);
+      });
+
+    } catch (err) {
+      console.error("Error while fetching users:", err);
+    }
+  }
+
+  // Toggle between English and Tamil languages
+  function toggleLanguage() {
+    const toggleBtn = document.getElementById("langToggle");
+
+    if (!isTamil) {
+      document.querySelector('#role option[value="ADMIN"]').textContent = "நிர்வாகி";
+      document.getElementById("headerTitle").textContent = "பயனர் மேலாண்மை";
+      document.getElementById("pageTitle").textContent = "பயனர் மேலாண்மை";
+      document.getElementById("username").placeholder = "பயனர் பெயர்";
+      document.getElementById("password").placeholder = "கடவுச்சொல்";
+      document.getElementById("saveBtn").textContent = "பயனரை சேமி";
+      document.getElementById("clearBtn").textContent = "அழி";
+      document.getElementById("allUsersTitle").textContent = "அனைத்து பயனர்கள்";
+      document.getElementById("thId").textContent = "அடையாள எண்";
+      document.getElementById("thUsername").textContent = "பயனர் பெயர்";
+      document.getElementById("thRole").textContent = "பங்கு";
+      toggleBtn.textContent = "English";
+      isTamil = true;
+    } else {
+      document.querySelector('#role option[value="ADMIN"]').textContent = "Admin";
+      document.getElementById("headerTitle").textContent = "User Management";
+      document.getElementById("pageTitle").textContent = "User Management";
+      document.getElementById("username").placeholder = "Username";
+      document.getElementById("password").placeholder = "Password";
+      document.getElementById("saveBtn").textContent = "Save User";
+      document.getElementById("clearBtn").textContent = "Clear";
+      document.getElementById("allUsersTitle").textContent = "All Users";
+      document.getElementById("thId").textContent = "ID";
+      document.getElementById("thUsername").textContent = "Username";
+      document.getElementById("thRole").textContent = "Role";
+      toggleBtn.textContent = "தமிழ்";
+      isTamil = false;
+    }
+  }
+</script>
+</body>
+</html>
