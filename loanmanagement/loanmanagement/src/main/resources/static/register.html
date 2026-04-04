@@ -236,7 +236,7 @@
       const msg = document.getElementById('registerMessage');
 
       try {
-        const res = await fetch('http://localhost:8080/auth/register', {
+        const res = await fetch('https://loan-management-system-1-5z32.onrender.com/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password, role })

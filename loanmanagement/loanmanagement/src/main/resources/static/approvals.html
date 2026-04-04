@@ -218,7 +218,7 @@ function updateTableHeaders(lang) {
   thead.innerHTML = tableHeaders[lang].map(header => `<th>${header}</th>`).join("");
 }
 
-    const API_BASE = 'http://localhost:8080'; // Replace with actual API URL
+const API_BASE = 'https://loan-management-system-1-5z32.onrender.com'; // Replace with actual API URL
     let lang = localStorage.getItem('lang') || 'EN'; // Default language is English
 
     // Language Toggle

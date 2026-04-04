@@ -205,7 +205,7 @@
       const username = document.getElementById('loginUsername').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
 
-      const res = await fetch('http://localhost:8080/auth/login', {
+      const res = await fetch('https://loan-management-system-1-5z32.onrender.com/auth/login', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
