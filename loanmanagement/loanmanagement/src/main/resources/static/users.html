@@ -155,7 +155,7 @@
       const userData = { username, password, role };
 
       try {
-        const res = await fetch("http://localhost:8080/api/users", {
+        const res = await fetch("https://loan-management-system-1-5z32.onrender.com/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(userData),
@@ -195,7 +195,7 @@
   // Load users from backend API
   async function loadUsers() {
     try {
-      const res = await fetch("http://localhost:8080/api/users");
+      const res = await fetch("https://loan-management-system-1-5z32.onrender.com/api/users");
 
       if (!res.ok) {
         console.error("Failed to load users:", res.status);

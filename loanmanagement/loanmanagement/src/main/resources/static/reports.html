@@ -147,7 +147,7 @@
 
   async function loadLoanSummary() {
     try {
-      const response = await fetch('http://localhost:8080/reports/loan-summary');
+      const response = await fetch('https://loan-management-system-1-5z32.onrender.com/reports/loan-summary');
       if (!response.ok) throw new Error('Network error');
       const summary = await response.json();
 
@@ -166,7 +166,7 @@
 
   async function loadEmiCollections() {
     try {
-      const response = await fetch('http://localhost:8080/reports/emi');
+      const response = await fetch('https://loan-management-system-1-5z32.onrender.com/reports/emi');
       const data = await response.json();
       const tbody = document.querySelector('#emiTable tbody');
       tbody.innerHTML = '';
@@ -182,7 +182,7 @@
 
   async function loadOverdueLoans() {
   try {
-    const response = await fetch('http://localhost:8080/reports/overdue');
+    const response = await fetch('https://loan-management-system-1-5z32.onrender.com/reports/overdue');
     if (!response.ok) throw new Error('Failed to fetch overdue loans');
     
     const loans = await response.json();
