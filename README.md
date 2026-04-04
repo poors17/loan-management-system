@@ -54,6 +54,11 @@ This application enables users to apply for loans and allows admins to manage ap
 
 ---
 
+💡 Note:
+The application is deployed on Render. Since it uses the free tier, the server may go to sleep after inactivity and take a few seconds to start again (cold start).
+
+---
+
 ## ▶️ How to Run (Local)
 
 ### 1️⃣ Clone the repository
